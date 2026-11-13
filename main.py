@@ -129,7 +129,12 @@ def main():
     cam_rot_x = 25
     cam_rot_y = 0
     is_dragging = False
-    
+    drag_start = (0, 0)
+    drag_end = (0, 0)
+
+    running = True
+    while running:
+        
 
 
 
