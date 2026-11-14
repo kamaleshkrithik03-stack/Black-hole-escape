@@ -1,6 +1,6 @@
 SCREEN_HEIGHT = 1280
 SCREEN_WIDTH = 800
-FPS = 60
+FPS = 120
 
 T_MASS = 1.31 * 10**41 # the mass of a TON 618
 S_MASS = 8.54 * 10**36 #sagittarius A* 

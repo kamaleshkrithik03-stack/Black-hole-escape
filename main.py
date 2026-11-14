@@ -1,8 +1,8 @@
 import os
 import math
-import random
 import sys
 import cv2
+import struct
 import pygame
 from config import *
 
@@ -238,7 +238,31 @@ def main():
         for face in ship.faces:
             face_points = [projected_vertices[i] for i in face]
             pygame.draw.polygon(screen, COLOR_SHIP, face_points, 1)
-        
+        if is_dragging:
+            pygame.draw.line(screen, (255, 255, 255), drag_start, drag_end, 2)
+            pygame.draw.circle(screen, (255, 255, 255), drag_start, 6, 1)
+        ui_rect = pygame.Rect(20, 20, 760, 90)
+        pygame.draw.rect(screen, (20, 22, 30), ui_rect, border_radius=10)
+        pygame.draw.rect(screen, (60, 60, 90), ui_rect, 1, border_radius=10)
+
+        title_surf = title_font.render(bh.name, True, COLOR_TEXT)
+        desc_surf = font.render(bh.description, True, (160, 175, 195))
+        controls_surf = font.render("drag it for launch and up/down for level switch[r] for reset", True, (120, 140, 170))
+        screen.blit(title_surf, (35, 30))
+        screen.blit(desc_surf, (35, 55))
+        screen.blit(controls_surf, (35, 80))
+
+        if ship.crashed:
+            crash_surf = title_font.render("you FAILURE- cant do basic phy huhh?", True, (255, 50 ,50))
+            screen.blit(crash_surf, (SCREEN_WIDTH / 2 - 230, SCREEN_HEIGHT / 2 + 120))
+        pygame.display.flip()
+        clock.tick(FPS)
+    pygame.quit()
+    sys.exit()
+if __name__ == "__main__":
+    main()
+
+
 
 
 
