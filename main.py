@@ -34,7 +34,38 @@ def normalize_mesh(vertices, target_radius):
     cx = 0.5 * (min(xs) + max(xs))
     cy = 0.5 * (min(ys) + max(ys))
     cz = 0.5 * (min(zs) + max(zs))
-    
+    max_extent = max(max(xs) - min(xs), max(ys) - min(zs) - min(zs), 10**-6)
+    scale = (target_radius * 2) / max_extent
+    return [[(v[0] - cx) * scale, (v[1] - cy) * scale, (v[2] - cz) * scale] for v in vertices]
+def load_stl(filename, target_radius, max_faces=800):
+    vertices = []
+    faces = []
+    if os.path.exists(filename):
+        file_size = os.path.getsize(filename)
+        with open(filename, 'rb') as f:
+            header = f.read(80)
+            count_bytes = f.read(4)
+            if len(count_bytes) == 4:
+                tri_count = struct.unpack('<I', count_bytes)[0]
+                if file_size == 84 + tri_count * 50:
+                    step = max(1, tri_count // max_faces)
+                    for i in range(0, tri_count, step):
+                        f.seek(84 + i * 50)
+                        tri_data = f.read(50)
+                        if len(tri_data) < 50:
+                            break
+                        vals = struct.unpack('<12fH', tri_data) #after lots of research and back breakers
+                        v1 = [vals[3], vals[4], vals[5]]
+                        v2 = [vals[6], vals[7], vals[8]]
+                        v3 = [vals[9], vals[10], vals[11]]
+                        idx = len(vertices)
+                        vertices.extend([v1, v2, v3])
+                        faces.append([idx, idx + 1, idx + 2])
+                    return normalize_mesh(vertices, target_radius), faces
+        with open(filename, 'r', errors='ignore') as f:
+            
+                                                
+                                                
 class BlackHole:
     def __init__(self, level_config):
         self.update_level(level_config)
