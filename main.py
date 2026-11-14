@@ -202,11 +202,11 @@ class Spaceship:
         self.is_launched = False
         self.crashed = False
 
-def project_3d_to_2d(x, y, z, camera_rot_x, camera_rot_y): #camera settings
-    cx, cy, cz = SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100, 0
-    dx = x - cx
-    dy = y - cy
-    dz = z - cz
+def project_3d_to_2d(x, y, z, camera_rot_x, camera_rot_y, cam_x=0, cam_y=0): #camera settings
+    cx, cy, = SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2
+    dx = x - cam_x
+    dy = y - cam_y
+    dz = z 
     rad_y = math.radians(camera_rot_y)
     cos_y, sin_y = math.cos(rad_y), math.sin(rad_y)
     x1 = dx * cos_y - dz * sin_y
@@ -238,145 +238,26 @@ def play_spaghetificaton_video():
         cap.release()
         cv2.destroyAllWindows()
 
-def main():
-    current_level = 1
-    bh = BlackHole(LEVELS[current_level])
-    ship = Spaceship(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 300, 0)
-    cam_rot_x = 25
-    cam_rot_y = 0
-    is_dragging = False
-    drag_start = (0, 0)
-    drag_end = (0, 0)
-
-    running = True
-    while running:
-        for event in pygame.event.get(): #lets get to mousebuttons and all keys pressed statements
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_ESCAPE:
-                    running = False
-                elif event.key == pygame.K_UP:
-                    current_level = min(3, current_level + 1)
-                    bh.update_level(LEVELS[current_level])
-                    ship.reset(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 300, 0)
-                elif event.key == pygame.K_DOWN:
-                    current_level = max(1, current_level - 1)
-                    bh.update_level(LEVELS[current_level])
-                    ship.reset(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 300, 0)
-                elif event.key == pygame.K_r:
-                    ship.reset(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 300, 0)
-            elif event.type == pygame.MOUSEBUTTONDOWN and not ship.is_launched:
-                is_dragging = True
-                drag_start = event.pos
-                drag_end = event.pos
-            elif event.type == pygame.MOUSEMOTION and is_dragging:
-                drag_end = event.pos
-            elif event.type == pygame.MOUSEBUTTONUP and is_dragging:
-                is_dragging = False
-                dx = drag_end[0] - drag_start[0]
-                dy = drag_end[1] - drag_start[1]
-                ship.vx = dx * 0.05
-                ship.vy = dx * 0.05
-                ship.vz = 0
-                ship.is_launched = True
-
-        if ship.is_launched and not ship.crashed:
-            rx = bh.x - ship.x
-            ry = bh.y - ship.y
-            rz = bh.z - ship.z 
-            dist_sq = rx**2 + ry**2 + rz**2 + 100
-            dist = math.sqrt(dist_sq)
-
-            if dist < bh.event_horizon:
-                ship.crashed = True
-                play_spaghetificaton_video()#now some education ingame
-            else:
-                force = (G * ship.mass * bh.mass) / dist_sq
-                accel_scale = 10**-12
-                ax = (rx / dist) * (force / ship.mass) * accel_scale
-                ay = (ry / dist) * (force / ship.mass) * accel_scale
-                az = (rz / dist) * (force / ship.mass) * accel_scale
-                ship.vx += ax
-                ship.vy += ay
-                ship.vz += az
-                ship.x += ship.vx
-                ship.y += ship.vy
-                ship.z += ship.vz
-                ship.trail.append((ship.x, ship.y, ship.z))
-                if len(ship.trail) > 150:
-                    ship.trail.pop(0)
-
-        screen.fill(COLOR_BG)
-        grid_spacing = 80
-        for gx in range(0, SCREEN_WIDTH + 1, grid_spacing):
-            points = []
-            for gy in range(0, SCREEN_HEIGHT + 1, 30):
-                dx = gx - bh.x
-                dy = gy - bh.y
-                d = math.sqrt(dx**2 + dy**2)
-                warp_z = 0
-                if 20 < d < 400:
-                    warp_z = -min(80, 2000 / d)
-                px, py, _ = project_3d_to_2d(gx, gy, warp_z, cam_rot_x, cam_rot_y)
-                points.append((px, py))
-            if len(points) > 1:
-                pygame.draw.lines(screen, COLOR_GRID, False, points, 1)
-        for gy in range(0, SCREEN_HEIGHT + 1, grid_spacing):
-            points = []
-            for gx in range(0, SCREEN_WIDTH + 1, 30):
-                dx = gx - bh.x
-                dy = gy - bh.y
-                d = math.sqrt(dx**2 + dy**2)
-                warp_z = 0
-                if 20 < d < 400:
-                    warp_z = -min(80, 2000 / d)
-                px, py, _ = project_3d_to_2d(gx, gy, warp_z, cam_rot_x, cam_rot_y)
-                points.append((px, py))
-            if len(points) > 1:
-                pygame.draw.lines(screen, COLOR_GRID, False, points, 1)
-        bh_px, bh_py, bh_scale = project_3d_to_2d(bh.x, bh.y, bh.z, cam_rot_x, cam_rot_y)
-        bh_radius = int(bh.event_horizon * bh_scale)
-        accretion_radius = int(bh_radius * 1.6)
-        pygame.draw.ellipse(screen, COLOR_ACCRETION,#renders of black hole
-                            (bh_px - accretion_radius, bh_py - int(accretion_radius * 0.5),
-                             accretion_radius * 2, accretion_radius), 3)
-        pygame.draw.circle(screen, COLOR_BH, (int(bh_px), int(bh_py)), bh_radius)
-        pygame.draw.circle(screen, (200, 100, 0), (int(bh_px), int(bh_py)), bh_radius, 2)
-
-        if len(ship.trail) > 1:
-            trail_points = [project_3d_to_2d(tx, ty, tz, cam_rot_x, cam_rot_y)[:2] for tx, ty, tz in ship.trail] #used ail forthis idk bout doing the trail bit of the ship
-            pygame.draw.lines(screen, (100, 150, 255), False, trail_points, 2)
-
-        projected_vertices = []
-        for vx, vy, vz in ship.vertices:
-            world_x = ship.x + vx #not earth lol
-            world_y = ship.y + vy
-            world_z = ship.z + vz
-            px, py, _ = project_3d_to_2d(world_x, world_y, world_z, cam_rot_x, cam_rot_y)
-            projected_vertices.append((px, py))
-        for face in ship.faces:
-            face_points = [projected_vertices[i] for i in face]
-            pygame.draw.polygon(screen, COLOR_SHIP, face_points, 1)
-        if is_dragging:
-            pygame.draw.line(screen, (255, 255, 255), drag_start, drag_end, 2)
-            pygame.draw.circle(screen, (255, 255, 255), drag_start, 6, 1)
-        ui_rect = pygame.Rect(20, 20, 760, 90)
-        pygame.draw.rect(screen, (20, 22, 30), ui_rect, border_radius=10)
-        pygame.draw.rect(screen, (60, 60, 90), ui_rect, 1, border_radius=10)
-
-        title_surf = title_font.render(bh.name, True, COLOR_TEXT)
-        desc_surf = font.render(bh.description, True, (160, 175, 195))
-        controls_surf = font.render("drag it for launch and up/down for level switch[r] for reset", True, (120, 140, 170))
-        screen.blit(title_surf, (35, 30))
-        screen.blit(desc_surf, (35, 55))
-        screen.blit(controls_surf, (35, 80))
-
-        if ship.crashed:
-            crash_surf = title_font.render("you FAILURE- cant do basic phy huhh?", True, (255, 50 ,50))
-            screen.blit(crash_surf, (SCREEN_WIDTH / 2 - 230, SCREEN_HEIGHT / 2 + 120))
-        pygame.display.flip()
-        clock.tick(FPS)
+class InputBox:
+    def __init__(self, rect, label, default_text):
+        self.rect = pygame.Rect(rect)
+        self.label = label
+        self.text = default_text
+        self.active = False
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            self.active = self.rect.collidepoint(event.pos)
+        elif event.unicode.isdigit() or event.unicode == ".":
+            if event.unicode != "." or "." not in self.text:
+                self.text += event.unicode
+    def value(self, fallback):
+        try:
+            val = float(self.text)
+            return val if val > 0 else fallback
+        except ValueError:
+            return fallback
+    def draw(self, surface):
+        
     pygame.quit()
     sys.exit()
 if __name__ == "__main__":
