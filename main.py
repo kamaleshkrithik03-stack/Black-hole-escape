@@ -45,9 +45,9 @@ class Spaceship:
         self.trail = []
         self.is_launched = False
         self.crashed = False
-        self.vertices, self.faces = self.load_obj("spaceship.obj")
+        self.vertices, self.faces = self.load_stl("spaceship.stl")
 
-    def load_obj(self, filename):
+    def load_stl(self, filename):
         vertices = [] # this is a import of spaceship 3d model
         faces = []
         if os.path.exists(filename):
@@ -134,7 +134,42 @@ def main():
 
     running = True
     while running:
-        
+        for event in pygame.event.get(): #lets get to mousebuttons and all keys pressed statements
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                elif event.key == pygame.K_UP:
+                    current_level = min(3, current_level + 1)
+                    bh.update_level(LEVELS[current_level])
+                    ship.reset(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 300, 0)
+                elif event.key == pygame.K_r:
+                    ship.reset(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 300, 0)
+            elif event.type == pygame.MOUSEBUTTONDOWN and not ship.is_launched:
+                is_dragging = True
+                drag_start = event.pos
+                drag_end = event.pos
+            elif event.type == pygame.MOUSEMOTION and is_dragging:
+                drag_end = event.pos
+            elif event.type == pygame.MOUSEBUTTONUP and is_dragging:
+                is_dragging = False
+                dx = drag_end[0] - drag_start[0]
+                dy = drag_end[1] - drag_start[1]
+                ship.vx = dx * 0.05
+                ship.vy = dx * 0.05
+                ship.vz = 0
+                ship.is_launched = True
+
+        if ship.is_launched and not ship.crashed:
+            rx = bh.x - ship.x
+            ry = bh.y - ship.y
+            rz = bh.z - ship.z 
+            dist_sq = rx**2 + ry**2 + rz**2 + 100
+
+
+
+
 
 
 
