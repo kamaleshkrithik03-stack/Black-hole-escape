@@ -166,6 +166,13 @@ def main():
             ry = bh.y - ship.y
             rz = bh.z - ship.z 
             dist_sq = rx**2 + ry**2 + rz**2 + 100
+            dist = math.sqrt(dist_sq)
+
+            if dist < bh.event_horizon:
+                ship.crashed = True
+                play_spaghetificaton_video()#now some education ingame
+            else:
+                
 
 
 
