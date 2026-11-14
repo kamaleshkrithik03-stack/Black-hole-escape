@@ -42,24 +42,48 @@ class Spaceship:
         self.vx = 0.0
         self.vy = 0.0
         self.vz = 0.0
+        self.mass = 1.0
         self.trail = []
         self.is_launched = False
         self.crashed = False
         self.vertices, self.faces = self.load_stl("spaceship.stl")
 
-    def load_stl(self, filename):
+def load_stl(self, filename):
         vertices = [] # this is a import of spaceship 3d model
         faces = []
         if os.path.exists(filename):
-            with open(filename, 'r') as f:
+            file_size = os.path.getsize(filename)
+            with open(filename, 'rb') as f:
+                header = f.read(80)
+                count_bytes = f.read(4)
+                if len(count_bytes) == 4:
+                    tri_count = struct.unpack('<I', count_bytes)[0]
+                    if file_size == 84 + tri_count * 50:
+                        for _ in range(tri_count):
+                            tri_data = f.read(50)
+                            if len(tri_data) < 50:
+                                break
+                            vals = struct.unpack('<12fH', tri_data)
+                            v1 = [vals[3] * 15, vals[4] * 15, vals[5] * 15]
+                            v2 = [vals[6] * 15, vals[7] * 15, vals[8] * 15]
+                            v3 = [vals[9] * 15, vals[10] * 15, vals[11] * 15]
+                            idx = len(vertices)
+                            vertices.extend([v1, v2, v3])
+                            faces.append([idx, idx + 1, idx + 2])
+                        print(f"ok 3d model : {filename} ({len(vertices)} vetices)")
+                        return vertices, faces
+
+            with open(filename, 'r', errors='ignore') as f:
+                tri_verts = []
                 for line in f:
-                    if line.startswith('v'):
-                        parts = line.split()
-                        vertices.append([float(parts[1]) * 15, float(parts[2]) * 15, float(parts[3]) * 15])
-                    elif line.startswith('f'):
-                        parts = line.split()
-                        face = [int(p.split('/')[0]) - 1 for p in parts[1:]]
-                        faces.append(face)
+                    parts = line.strip().split()
+                    if len(parts) >= 4 and parts[0].lower() == 'vertex':
+                        tri_verts.append([float(parts[1]) * 15, float(parts[2]) * 15, float(parts[3]) * 15])
+                        if len(tri_verts) == 3:
+                            idx = len(vertices)
+                            vertices.extend(tri_verts)
+                            faces.append([idx, idx + 1, idx + 2])
+                            tri_verts = []
             print(f"ok 3d model : {filename} ({len(vertices)} vetices)")
         else: #tis for no crahes if no 3d file found
             vertices = [
@@ -76,16 +100,16 @@ class Spaceship:
             ]
         return vertices, faces
         
-    def reset(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.vx = 0.0
-        self.vy = 0.0
-        self.vz = 0.0
-        self.trail.clear()
-        self.is_launched = False
-        self.crashed = False
+def reset(self, x, y, z):
+    self.x = x
+    self.y = y
+    self.z = z
+    self.vx = 0.0
+    self.vy = 0.0
+    self.vz = 0.0
+    self.trail.clear()
+    self.is_launched = False
+    self.crashed = False
 
 def project_3d_to_2d(x, y, z, camera_rot_x, camera_rot_y): #camera settings
     cx, cy, cz = SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100, 0
@@ -99,13 +123,14 @@ def project_3d_to_2d(x, y, z, camera_rot_x, camera_rot_y): #camera settings
 
     rad_x = math.radians(camera_rot_x)
     cos_x, sin_x = math.cos(rad_x), math.sin(rad_x)
-    y2 = dx * cos_y - dz * sin_x
-    z2 = dx * sin_y + dz * cos_x
+    y2 = dx * cos_y - z1 * sin_x
+    z2 = dx * sin_y + z2 * cos_x
     fov = 600.0
     scale = fov / (fov + z2 + 300)
 
     screen_x = cx + x1 * scale
     screen_y = cy + y2 * scale
+    return screen_x, screen_y, scale
 
 def play_spaghetificaton_video():
     video_path = "video.mp4"
@@ -116,7 +141,7 @@ def play_spaghetificaton_video():
             if not ret:
                 break
             frame = cv2.resize(frame, (SCREEN_WIDTH, SCREEN_HEIGHT))
-            cv2.imsḥow("EVENT HORIZON", frame)
+            cv2.imshow("EVENT HORIZON", frame)
             if cv2.waitKey(30) & 0xFF == ord('q'):
                 break
         cap.release()
@@ -142,6 +167,10 @@ def main():
                     running = False
                 elif event.key == pygame.K_UP:
                     current_level = min(3, current_level + 1)
+                    bh.update_level(LEVELS[current_level])
+                    ship.reset(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 300, 0)
+                elif event.key == pygame.K_DOWN:
+                    current_level = max(3, current_level - 1)
                     bh.update_level(LEVELS[current_level])
                     ship.reset(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 300, 0)
                 elif event.key == pygame.K_r:
