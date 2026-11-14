@@ -218,11 +218,28 @@ def main():
         bh_px, bh_py, bh_scale = project_3d_to_2d(bh.x, bh.y, bh.z, cam_rot_x, cam_rot_y)
         bh_radius = int(bh.event_horizon * bh_scale)
         accretion_radius = int(bh_radius * 1.6)
-        pygame.draw.ellipse(screen, COLOR_ACCRETION,
+        pygame.draw.ellipse(screen, COLOR_ACCRETION,#renders of black hole
                             (bh_px - accretion_radius, bh_py - int(accretion_radius * 0.5),
                              accretion_radius * 2, accretion_radius), 3)
         pygame.draw.circle(screen, COLOR_BH, (int(bh_px), int(bh_py)), bh_radius)
+        pygame.draw.circle(screen, (200, 100, 0), (int(bh_px), int(bh_py)), bh_radius)
+
+        if len(ship.trail) > 1:
+            trail_points = [project_3d_to_2d(tx, ty, tz, cam_rot_x, cam_rot_y)[:2] for tx, ty, tz in ship.trail] #used ail forthis idk bout doing the trail bit of the ship
+            pygame.draw.lines(screen, (100, 150, 255), False, trail_points, 2)
+
+        projected_vertices = []
+        for vx, vy, vz in ship.vertices:
+            world_x = ship.x + vx #not earth lol
+            world_y = ship.y + vy
+            world_z = ship.z + vz
+            px, py, _ = project_3d_to_2d(world_x, world_y, world_z, cam_rot_x, cam_rot_y)
+            projected_vertices.append((px, py))
+        for face in ship.faces:
+            face_points = [projected_vertices[i] for i in face]
+            pygame.draw.polygon(screen, COLOR_SHIP, face_points, 1)
         
+
 
 
 
