@@ -257,7 +257,56 @@ class InputBox:
         except ValueError:
             return fallback
     def draw(self, surface):
-        
+        surface.blit(small_font.render(self.label, True, (170, 185, 210)), (self.rect.x, self.rect.y - 20)) #used ai in the def(copy paste no worries) and also i used it only for the specific numbers 
+        border_col = (90, 170, 255) if self.active else (70, 80, 105)
+        pygame.draw.rect(surface, (28, 32, 44), self.rect, border_radius=6)
+        pygame.draw.rect(surface, border_col, self.rect, 2, border_radius=6)
+        surface.blit(font.render(self.text or "0", True, COLOR_TEXT), (self.rect.x + 10, self.rect.y + 7))
+def predict_path(ship, bh, steps=160): #for the trajectory
+    px, py, pz = ship.x, ship.y, ship.z
+    vx, vy, vz = ship.vx, ship.vy, ship. vz
+    path = []
+    for _ in range(steps):
+        rx = bh.x - px
+        ry = bh.y - py
+        rz = bh.z - pz
+        dist_sq = rx * rx + ry * ry + rz * rz + 1
+        dist = math.sqrt(dist_sq)
+        if dist < bh.event_horizon:
+            break
+        accel = bh.mu / dist_sq
+        vx += (rx / dist) * accel
+        vy += (ry / dist) * accel
+        vz += (rz / dist) * accel
+        px += vx
+        py += vy
+        pz += vz
+        path.append((px, py, pz))
+        if dist > 1400:
+            break
+    return path
+def main():
+    current_level = 1
+    bh = BlackHole(LEVELS[current_level])
+    fuel_box = InputBox((SCREEN_WIDTH + 24, 155, 270, 36), "Fuel", "120")
+    mass_box = InputBox((SCREEN_WIDTH + 24, 230, 270, 36), "ship weight or mass", "100")
+    apply_btn = pygame.Rect(SCREEN_WIDTH + 24, 282, 270, 36)
+
+    ship = Spaceship(0.0, 210, 0.0, mass=mass_box.value(100), fuel=fuel_box.value(120))
+    cam_rot_x = 22
+    cam_rot_y = 0
+    cam_x = ship.x
+    cam_y = ship.y * 0.5
+
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            fuel_box.handle_event(event)
+            mass_box.handle_event(event)
+
+            
     pygame.quit()
     sys.exit()
 if __name__ == "__main__":
