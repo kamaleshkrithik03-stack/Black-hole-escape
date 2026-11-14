@@ -9,12 +9,14 @@ from config import *
 pygame.init()
 pygame.mixer.init()
 
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+SIDE_PANEL_WIDTH = 320
+screen = pygame.display.set_mode((SCREEN_WIDTH + SIDE_PANEL_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Black hole sim ig")
 clock = pygame.time.Clock()
 
-font = pygame.font.SysFont("Orbitron", 18)
-title_font = pygame.font.SysFont("Orbitron", 22, bold=True)
+font = pygame.font.SysFont("Orbitron", 16)
+small_font = pygame.font.SysFont("Orbitron", 14)
+title_font = pygame.font.SysFont("Orbitron", 20, bold=True)
 
 if os.path.exists("interstellar.mp3"):
     pygame.mixer.music.load("interstellar.mp3")
@@ -23,6 +25,16 @@ if os.path.exists("interstellar.mp3"):
 else:
     print("The music is not found so go and download intersteallar.mp3")
 
+def normalize_mesh(vertices, target_radius):
+    if not vertices:
+        return vertices
+    xs = [v[0] for v in vertices]
+    ys = [v[1] for v in vertices]
+    zs = [v[2] for v in vertices]
+    cx = 0.5 * (min(xs) + max(xs))
+    cy = 0.5 * (min(ys) + max(ys))
+    cz = 0.5 * (min(zs) + max(zs))
+    
 class BlackHole:
     def __init__(self, level_config):
         self.update_level(level_config)
@@ -48,7 +60,7 @@ class Spaceship:
         self.crashed = False
         self.vertices, self.faces = self.load_stl("spaceship.stl")
 
-def load_stl(self, filename):
+    def load_stl(self, filename):
         vertices = [] # this is a import of spaceship 3d model
         faces = []
         if os.path.exists(filename):
@@ -100,16 +112,16 @@ def load_stl(self, filename):
             ]
         return vertices, faces
         
-def reset(self, x, y, z):
-    self.x = x
-    self.y = y
-    self.z = z
-    self.vx = 0.0
-    self.vy = 0.0
-    self.vz = 0.0
-    self.trail.clear()
-    self.is_launched = False
-    self.crashed = False
+    def reset(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.vx = 0.0
+        self.vy = 0.0
+        self.vz = 0.0
+        self.trail.clear()
+        self.is_launched = False
+        self.crashed = False
 
 def project_3d_to_2d(x, y, z, camera_rot_x, camera_rot_y): #camera settings
     cx, cy, cz = SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100, 0
@@ -123,8 +135,8 @@ def project_3d_to_2d(x, y, z, camera_rot_x, camera_rot_y): #camera settings
 
     rad_x = math.radians(camera_rot_x)
     cos_x, sin_x = math.cos(rad_x), math.sin(rad_x)
-    y2 = dx * cos_y - z1 * sin_x
-    z2 = dx * sin_y + z2 * cos_x
+    y2 = dy * cos_x - z1 * sin_x
+    z2 = dy * sin_x + z1 * cos_x
     fov = 600.0
     scale = fov / (fov + z2 + 300)
 
@@ -170,7 +182,7 @@ def main():
                     bh.update_level(LEVELS[current_level])
                     ship.reset(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 300, 0)
                 elif event.key == pygame.K_DOWN:
-                    current_level = max(3, current_level - 1)
+                    current_level = max(1, current_level - 1)
                     bh.update_level(LEVELS[current_level])
                     ship.reset(SCREEN_WIDTH / 2, SCREEN_HEIGHT - 300, 0)
                 elif event.key == pygame.K_r:
@@ -251,7 +263,7 @@ def main():
                             (bh_px - accretion_radius, bh_py - int(accretion_radius * 0.5),
                              accretion_radius * 2, accretion_radius), 3)
         pygame.draw.circle(screen, COLOR_BH, (int(bh_px), int(bh_py)), bh_radius)
-        pygame.draw.circle(screen, (200, 100, 0), (int(bh_px), int(bh_py)), bh_radius)
+        pygame.draw.circle(screen, (200, 100, 0), (int(bh_px), int(bh_py)), bh_radius, 2)
 
         if len(ship.trail) > 1:
             trail_points = [project_3d_to_2d(tx, ty, tz, cam_rot_x, cam_rot_y)[:2] for tx, ty, tz in ship.trail] #used ail forthis idk bout doing the trail bit of the ship
