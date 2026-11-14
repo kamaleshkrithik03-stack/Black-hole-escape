@@ -196,7 +196,35 @@ def main():
                 dy = gy - bh.y
                 d = math.sqrt(dx**2 + dy**2)
                 warp_z = 0
-                
+                if 20 < d < 400:
+                    warp_z = -min(80, 2000 / d)
+                px, py, _ = project_3d_to_2d(gx, gy, warp_z, cam_rot_x, cam_rot_y)
+                points.append((px, py))
+            if len(points) > 1:
+                pygame.draw.lines(screen, COLOR_GRID, False, points, 1)
+        for gy in range(0, SCREEN_HEIGHT + 1, grid_spacing):
+            points = []
+            for gx in range(0, SCREEN_WIDTH + 1, 30):
+                dx = gx - bh.x
+                dy = gy - bh.y
+                d = math.sqrt(dx**2 + dy**2)
+                warp_z = 0
+                if 20 < d < 400:
+                    warp_z = -min(80, 2000 / d)
+                px, py, _ = project_3d_to_2d(gx, gy, warp_z, cam_rot_x, cam_rot_y)
+                points.append((px, py))
+            if len(points) > 1:
+                pygame.draw.lines(screen, COLOR_GRID, False, points, 1)
+        bh_px, bh_py, bh_scale = project_3d_to_2d(bh.x, bh.y, bh.z, cam_rot_x, cam_rot_y)
+        bh_radius = int(bh.event_horizon * bh_scale)
+        accretion_radius = int(bh_radius * 1.6)
+        pygame.draw.ellipse(screen, COLOR_ACCRETION,
+                            (bh_px - accretion_radius, bh_py - int(accretion_radius * 0.5),
+                             accretion_radius * 2, accretion_radius), 3)
+        pygame.draw.circle(screen, COLOR_BH, (int(bh_px), int(bh_py)), bh_radius)
+        
+
+
 
 
 
