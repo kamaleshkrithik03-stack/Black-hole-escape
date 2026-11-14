@@ -63,34 +63,82 @@ def load_stl(filename, target_radius, max_faces=800):
                         faces.append([idx, idx + 1, idx + 2])
                     return normalize_mesh(vertices, target_radius), faces
         with open(filename, 'r', errors='ignore') as f:
-            
-                                                
+            tri_verts = []
+            for line in f:
+                parts = line.strip().split()
+                if len(parts) >= 4 and parts[0].lower() == 'vertex':
+                    tri_verts.append([float(parts[1]), float(parts[2]), float(parts[3])])
+                    if len(tri_verts) == 3:
+                        if len(faces) < max_faces:
+                            idx = len(vertices)
+                            vertices.extend(tri_verts)
+                            faces.append([idx, idx + 1, idx + 2])
+                        tri_verts = []
+        return normalize_mesh(vertices, target_radius), faces
+
+    vertices = [
+        [0, -15, 0],
+        [-10, 10, -5],
+        [10, 10, -5],
+        [0, 5, 10]
+    ]
+    faces = [
+        [0, 1, 3],
+        [0, 3, 2],
+        [0, 2, 1],
+        [1, 2, 3]
+    ]
+    return vertices, faces                                           
                                                 
 class BlackHole:
     def __init__(self, level_config):
         self.update_level(level_config)
-        self.x = SCREEN_WIDTH / 2
-        self.y = SCREEN_WIDTH / 2 - 100
-        self.z = 0.0
+        self.x = 0
+        self.y = 0
+        self.z = 0
+        self.stl_vertices, self.stl_faces = load_stl("blackhole.stl", target_radius=45, max_faces=700)
+        self.sprite = None
+        for ext in ("blackhole.png", "blackhole.jpg", "blackhole.JPG"):
+            if os.path.exists(ext):
+                self.sprite = pygame.image.load(ext).convert_alpha()
+                break
+
     def update_level(self, level_config):
         self.name = level_config["name"] #from config
         self.mass = level_config["mass"]
         self.event_horizon = level_config["event_horizon"]
         self.description = level_config["description"]
+    @property
+    def mu(self):
+        return 18000.0 * (self.event_horizon / 25.0)
 class Spaceship:
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
-        self.vx = 0.0
-        self.vy = 0.0
+    def __init__(self, x, y, z, mass=100.0, fuel=120):
+        self.x = float(x)
+        self.y = float(y)
+        self.z = float(z)
+        self.vx = 3.2
+        self.vy = -0.6
         self.vz = 0.0
-        self.mass = 1.0
+        self.mass = float(mass)
+        self.fuel = float(fuel)
         self.trail = []
         self.is_launched = False
         self.crashed = False
-        self.vertices, self.faces = self.load_stl("spaceship.stl")
-
+        self.vertices, self.faces = self.load_stl("spaceship.stl", target_radius=18, max_faces=1000)
+    def reset(self, x, y, z, mass=None, fuel=None):
+        if mass is not None:
+            self.mass = max(1.0, float(mass))
+        if fuel is not None:
+            self.fuel = max(0.0, float(fuel))
+        self.x = float(x)
+        self.y = float(y)
+        self.z = float(z)
+        self.vx = 3.2
+        self.vy = -0.6
+        self.vz = 0
+        self.trail.clear()
+        self.crashed = False
+        self.escaped = False
     def load_stl(self, filename):
         vertices = [] # this is a import of spaceship 3d model
         faces = []
