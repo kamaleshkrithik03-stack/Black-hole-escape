@@ -172,7 +172,34 @@ def main():
                 ship.crashed = True
                 play_spaghetificaton_video()#now some education ingame
             else:
+                force = (G * ship.mass * bh.mass) / dist_sq
+                accel_scale = 10**-12
+                ax = (rx / dist) * (force / ship.mass) * accel_scale
+                ay = (ry / dist) * (force / ship.mass) * accel_scale
+                az = (rz / dist) * (force / ship.mass) * accel_scale
+                ship.vx += ax
+                ship.vy += ay
+                ship.vz += az
+                ship.x += ship.vx
+                ship.y += ship.vy
+                ship.z += ship.vz
+                ship.trail.append((ship.x, ship.y, ship.z))
+                if len(ship.trail) > 150:
+                    ship.trail.pop(0)
+
+        screen.fill(COLOR_BG)
+        grid_spacing = 80
+        for gx in range(0, SCREEN_WIDTH + 1, grid_spacing):
+            points = []
+            for gy in range(0, SCREEN_HEIGHT + 1, 30):
+                dx = gx - bh.x
+                dy = gy - bh.y
+                d = math.sqrt(dx**2 + dy**2)
+                warp_z = 0
                 
+
+
+
 
 
 
