@@ -343,6 +343,40 @@ def main():
             rz = bh.z - ship.z
             dist_sq = rx * rx + ry * ry + rz * rz + 1
             dist = math.sqrt(dist_sq) #big eq be like
+            speed = math.hypot(ship.vx, ship.vy)
+            esc_vel = math.sqrt((2.0 * bh.mu) / max(1.0, dist))
+            if speed >= esc_vel:
+                ship.escaped = True
+            if not ship.crashed:
+                if dist < bh.event_horizon:
+                    ship.crashed = True
+                    play_spaghetificaton_video()
+                else:
+                    grav_accel = bh.mu / dist_sq
+                    ax = (rx / dist) * grav_accel
+                    ay = (ry / dist) * grav_accel
+                    az = (rz / dist) * grav_accel
+
+                    if thrust_power != 0.0:
+                        dir_x = ship.vx / speed if speed > 10**-5 else 1
+                        dir_y = ship.vy / speed if speed > 10**-5 else 0
+                        thrust_accel = thrust_power / max(1.0, ship.mass)
+                        ax += dir_x * thrust_accel
+                        ay += dir_y * thrust_accel
+                    ship.vx += ax
+                    ship.vy += ay
+                    ship.vz += az
+                    ship.x += ship.vx
+                    ship.y += ship.vy
+                    ship.z += ship.vz
+                    ship.trail.append((ship.x, ship.y, ship.z))
+                    if len(ship.trail) > 220:
+                        ship.trail.pop(0)
+            cam_x += ((ship.x * 0.75 + bh.x * 0.25) - cam_x) * 0.08
+            cam_y += ((ship.y * 0.75 + bh.y * 0.25) - cam_y) * 0.08
+
+            screen.fill(COLOR_BG)
+            
 
     pygame.quit()
     sys.exit()
