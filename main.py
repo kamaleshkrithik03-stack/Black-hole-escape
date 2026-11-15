@@ -331,7 +331,19 @@ def main():
                         ship.reset(0, 210, 0, mass=mass_box.value(100), fuel=fuel_box.value(120))
             keys = pygame.key.get_pressed()
             thrust_power = 0
-            
+            if not (fuel_box.active or mass_box.active) and not ship.crashed:
+                if keys[pygame.K_w] and ship.fuel > 0:
+                    thrust_power = 14
+                    ship.fuel = max(0.0, ship.fuel - 0.35)
+                elif keys[pygame.K_s] and ship.fuel > 0:
+                    thrust_power = 0 #if id like i can add retro boost here
+                    ship.fuel = max(0, ship.fuel)
+            rx = bh.x - ship.x
+            ry = bh.y - ship.y
+            rz = bh.z - ship.z
+            dist_sq = rx * rx + ry * ry + rz * rz + 1
+            dist = math.sqrt(dist_sq) #big eq be like
+
     pygame.quit()
     sys.exit()
 if __name__ == "__main__":
