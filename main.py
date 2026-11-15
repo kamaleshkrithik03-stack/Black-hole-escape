@@ -306,6 +306,31 @@ def main():
             fuel_box.handle_event(event)
             mass_box.handle_event(event)
 
+            if event.type == pygame.MOUSEBUTTONDOWN and apply_btn.collidepoint(event.pos):
+                ship.reset(0.0, 210, 0.0, mass=mass_box.value(100), fuel=fuel_box.value(120))
+                cam_x = ship.x
+                cam_y = ship.y * 0.5
+            elif event.type == pygame.KEYDOWN:
+                if fuel_box.active or mass_box.active:
+                    if fuel_box.active or mass_box.active:
+                        if event.key == pygame.K_RETURN:
+                            fuel_box.active = False
+                            mass_box.active = False
+                        continue
+                    if event.key == pygame.K_ESCAPE:
+                        running = False
+                    elif event.key == pygame.K_UP:
+                        current_level = min(3, current_level + 1)
+                        bh.update_level(LEVELS[current_level])
+                        ship.reset(0.0, 210, 0.0, mass=mass_box.value(100), fuel=fuel_box.value(120))
+                    elif event.key == pygame.K_UP:
+                        current_level = max(1, current_level - 1)
+                        bh.update_level(LEVELS[current_level])
+                        ship.reset(0.0, 210, 0.0, mass=mass_box.value(100), fuel=fuel_box.value(120))
+                    elif event.key == pygame.K_r:
+                        ship.reset(0, 210, 0, mass=mass_box.value(100), fuel=fuel_box.value(120))
+            keys = pygame.key.get_pressed()
+            thrust_power = 0
             
     pygame.quit()
     sys.exit()
