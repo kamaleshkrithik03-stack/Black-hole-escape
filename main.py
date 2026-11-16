@@ -304,7 +304,33 @@ def main():
 
             if thruster_fired:
                 out_x = -rx / dist
-                
+                out_y = -ry / dist
+                tan_x = -out_y if keys[pygame.K_w] else out_y
+                tan_y = out_x if keys[pygame.K_w] else -out_x
+                thrust_accel = thrust_power / max(1.0, ship.mass)
+                ax += (out_x * 0.85 + tan_x * 0.55) * thrust_accel
+                ay += (out_y * 0.85 + tan_y * 0.55) * thrust_accel
+            ship.vx += ax
+            ship.vy += ay
+            ship.vz += az
+            ship.x += ship.vx
+            ship.y += ship.vy
+            ship.z += ship.vz
+
+            if thruster_fired and dist <= bh.event_horizon + 8.0:
+                 safe_dist = bh.event_horizon + 10
+                 ship.x = bh.x - (rx / dist) * safe_dist
+                 ship.y = bh.y - (ry / dist) * safe_dist
+                 ship.vx = max(ship.vx, -rx / dist * 2.5)
+                 ship.vy = max(ship.vy, -ry / dist * 2.5)
+            elif not thruster_fired and dist < bh.event_horizon:
+                ship.crashed = True
+                play_spaghetificaton_video()
+            ship.trail.append((ship.x, ship.y, ship.z))
+            if len(ship.trail) > 220:
+                ship.trail.pop(0)
+
+
 
         cam_x += ((ship.x * 0.75 + bh.x * 0.25) - cam_x) * 0.08
         cam_y += ((ship.y * 0.75 + bh.y * 0.25) - cam_y) * 0.08
@@ -322,18 +348,18 @@ def main():
                 pygame.draw.lines(screen, COLOR_GRID, False, points, 1)
 
         bh_px, bh_py, bh_scale = project_3d_to_2d(bh.x, bh.y, bh.z, cam_rot_x, cam_rot_y, cam_x, cam_y)
-        bh_radius = max(12, int(bh.event_horizon * bh_scale))
-        if bh.stl_vertices and bh.stl_faces:
+        bh_radius = max(24, int(bh.event_horizon * bh_scale * 1.6))
+        if bh.sprite is not None:
+            size = max(160, bh_radius * 6)
+            scaled_sprite = pygame.transform.smoothscale(bh.sprite, (size, size))
+            screen.blit(scaled_sprite, (int(bh_px - size / 2), int(bh_py - size / 2)))
+        elif bh.stl_verrtices and bh.stl_faces:
             bh_proj = [
-                project_3d_to_2d(bh.x + vx, bh.y + vy, bh.z + vz, cam_rot_x, cam_rot_y, cam_x, cam_y)[:2]
+                project_3d_to_2d(bh.x + vx * 2, bh.y + vy * 2, bh.z + vz * 2, cam_rot_x, cam_rot_y, cam_x, cam_y)[:2]
                 for vx, vy, vz in bh.stl_vertices
             ]
             for face in bh.stl_faces:
                 pygame.draw.polygon(screen, COLOR_ACCRETION, [bh_proj[i] for i in face], 1)
-        elif bh.sprite is not None:
-            size = bh_radius * 4
-            scaled_sprite = pygame.transform.smoothscale(bh.sprite, (size, size))
-            screen.blit(scaled_sprite, (int(bh_px - size / 2), int(bh_py - size / 2)))
         else:
             accretion_radius = int(bh_radius * 2.2)
             pygame.draw.ellipse(
@@ -344,6 +370,7 @@ def main():
             )
             pygame.draw.circle(screen, COLOR_BH, (int(bh_px), int(bh_py)), bh_radius)
             pygame.draw.circle(screen, (200, 100, 0), (int(bh_px), int(bh_py)), bh_radius, 2)
+            
 
         pred_pts = [
             project_3d_to_2d(px, py, pz, cam_rot_x, cam_rot_y, cam_x, cam_y)[:2]
