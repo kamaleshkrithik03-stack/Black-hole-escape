@@ -41,7 +41,7 @@ def normalize_mesh(vertices, target_radius):
 def load_stl(filename, target_radius=50, max_faces=800):
     vertices = []
     faces = []
-    if not os.path.exist(filename):
+    if not os.path.exists(filename):
         return [], []
     with open(filename, "rb") as f:
         f.read(80)
@@ -62,8 +62,6 @@ def load_stl(filename, target_radius=50, max_faces=800):
         vertices = normalize_mesh(vertices, target_radius)
     return vertices, faces
 
-
-
                                                 
 class BlackHole:
     def __init__(self, level_config):
@@ -80,6 +78,8 @@ class BlackHole:
             if os.path.exists(ext):
                 self.sprite = pygame.image.load(ext).convert()
                 break
+        print("Loaded vertices:", len(self.stl_vertices))
+        print("Loaded faces:", len(self.stl_faces))
 
     def update_level(self, level_config):
         self.name = level_config["name"]
@@ -216,7 +216,7 @@ def main():
     apply_btn = pygame.Rect(SCREEN_WIDTH + 24, 282, 270, 36)
 
     ship = Spaceship(0.0, 210, 0.0, mass=mass_box.value(100), fuel=fuel_box.value(120))
-    cam_rot_x = 22
+    cam_rot_x = 45
     cam_rot_y = 0
     cam_x = ship.x
     cam_y = ship.y * 0.5
@@ -314,11 +314,21 @@ def main():
 
         screen.fill(COLOR_BG)
         grid_spacing = 120
-        for gx in range(-600, 601, grid_spacing):
+        grid_range = 600
+        for gx in range(-grid_range, grid_range + 1, grid_spacing):
             points = []
-            for gy in range(-600, 601, 40):
+            for gy in range(-grid_range, grid_range + 1, 40):
                 d = math.hypot(gx - bh.x, gy - bh.y)
-                warp_z = -min(70, 3500 / max(15, d)) if d < 420 else 0
+                warp_z = -min(60, 3000 / max(20, d)) if d < 420 else 0
+                px, py, _ = project_3d_to_2d(gx, gy, warp_z, cam_rot_x, cam_rot_y, cam_x, cam_y)
+                points.append((px, py))
+            if len(points) > 1:
+                pygame.draw.lines(screen, COLOR_GRID, False, points, 1)
+        for gy in range(-grid_range, grid_range + 1, grid_spacing):
+            points = []
+            for gx in range(-grid_range, grid_range + 1, grid_spacing):
+                d = math.hypot(gx - bh.x, gy - bh.y)
+                warp_z = -min(60, 3000 / max(20, d)) if d < 400 else 0
                 px, py, _ = project_3d_to_2d(gx, gy, warp_z, cam_rot_x, cam_rot_y, cam_x, cam_y)
                 points.append((px, py))
             if len(points) > 1:
@@ -327,7 +337,7 @@ def main():
         bh_px, bh_py, bh_scale = project_3d_to_2d(bh.x, bh.y, bh.z, cam_rot_x, cam_rot_y, cam_x, cam_y)
         bh_radius = max(24, int(bh.event_horizon * bh_scale * 1.6))
         if bh.sprite is not None:
-            size = max(160, bh_radius * 6)
+            size = max(80, min(400, int(bh_radius * 3)))
             scaled_sprite = pygame.transform.smoothscale(bh.sprite, (size, size))
             screen.blit(scaled_sprite, (int(bh_px - size / 2), int(bh_py - size / 2)))
         elif bh.stl_vertices and bh.stl_faces:
