@@ -216,7 +216,7 @@ def main():
     apply_btn = pygame.Rect(SCREEN_WIDTH + 24, 282, 270, 36)
 
     ship = Spaceship(0.0, 210, 0.0, mass=mass_box.value(100), fuel=fuel_box.value(120))
-    cam_rot_x = 45
+    cam_rot_x = 135
     cam_rot_y = 0
     cam_x = ship.x
     cam_y = ship.y * 0.5
