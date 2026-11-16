@@ -54,7 +54,13 @@ def load_stl(filename, target_radius=50, max_faces=800):
             v2 = struct.unpack("<3f", data[24:36])#multiples of 12 if u havent noticed
             v3 = struct.unpack("<3f", data[36:48])
             base = len(vertices)
-            
+            vertices.append(list(v1))
+            vertices.append(list(v2))
+            vertices.append(list(v3))
+            faces.append([base, base + 1, base + 2])
+    if vertices:
+        vertices = normalize_mesh(vertices, target_radius)
+    return vertices, faces
 
 
 
