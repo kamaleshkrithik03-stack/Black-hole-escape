@@ -37,58 +37,27 @@ def normalize_mesh(vertices, target_radius):
     max_extent = max(max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs), 10**-6)
     scale = (target_radius * 2) / max_extent
     return [[(v[0] - cx) * scale, (v[1] - cy) * scale, (v[2] - cz) * scale] for v in vertices]
-def load_stl(filename, target_radius, max_faces=800):
+
+def load_stl(filename, target_radius=50, max_faces=800):
     vertices = []
     faces = []
-    if os.path.exists(filename):
-        file_size = os.path.getsize(filename)
-        with open(filename, 'rb') as f:
-            header = f.read(80)
-            count_bytes = f.read(4)
-            if len(count_bytes) == 4:
-                tri_count = struct.unpack('<I', count_bytes)[0]
-                if file_size == 84 + tri_count * 50:
-                    step = max(1, tri_count // max_faces)
-                    for i in range(0, tri_count, step):
-                        f.seek(84 + i * 50)
-                        tri_data = f.read(50)
-                        if len(tri_data) < 50:
-                            break
-                        vals = struct.unpack('<12fH', tri_data) #after lots of research and back breakers
-                        v1 = [vals[3], vals[4], vals[5]]
-                        v2 = [vals[6], vals[7], vals[8]]
-                        v3 = [vals[9], vals[10], vals[11]]
-                        idx = len(vertices)
-                        vertices.extend([v1, v2, v3])
-                        faces.append([idx, idx + 1, idx + 2])
-                    return normalize_mesh(vertices, target_radius), faces
-        with open(filename, 'r', errors='ignore') as f:
-            tri_verts = []
-            for line in f:
-                parts = line.strip().split()
-                if len(parts) >= 4 and parts[0].lower() == 'vertex':
-                    tri_verts.append([float(parts[1]), float(parts[2]), float(parts[3])])
-                    if len(tri_verts) == 3:
-                        if len(faces) < max_faces:
-                            idx = len(vertices)
-                            vertices.extend(tri_verts)
-                            faces.append([idx, idx + 1, idx + 2])
-                        tri_verts = []
-        return normalize_mesh(vertices, target_radius), faces
+    if not os.path.exist(filename):
+        return [], []
+    with open(filename, "rb") as f:
+        f.read(80)
+        num_triangles = struct.unpack("<I", f.read(4))[0]
+        for i in range(min(num_triangles, max_faces)):
+            data = f.read(50)
+            if len(data) < 50:
+                break
+            v1 = struct.unpack("<3f", data[12:24]) #12*2 is24 perefcestion in randomnes 
+            v2 = struct.unpack("<3f", data[24:36])#multiples of 12 if u havent noticed
+            v3 = struct.unpack("<3f", data[36:48])
+            base = len(vertices)
+            
 
-    vertices = [
-        [0, -15, 0],
-        [-10, 10, -5],
-        [10, 10, -5],
-        [0, 5, 10]
-    ]
-    faces = [
-        [0, 1, 3],
-        [0, 3, 2],
-        [0, 2, 1],
-        [1, 2, 3]
-    ]
-    return vertices, faces                                           
+
+
                                                 
 class BlackHole:
     def __init__(self, level_config):
