@@ -121,6 +121,8 @@ class Spaceship:
         self.y = float(y)
         self.z = float(z)
         self.vx = 0.0
+        self.vy = 0.0
+        self.vz = 0.0
         self.mass = float(mass)
         self.fuel = float(fuel)
         self.trail = []
@@ -281,11 +283,11 @@ def main():
         if not (fuel_box.active or mass_box.active) and not ship.crashed:
             if keys[pygame.K_w] and ship.fuel > 0:
                 thruster_fired = True
-                thrust_power = 26
+                thrust_power = 26.0
                 ship.fuel = max(0, ship.fuel - 0.8)
             elif keys[pygame.K_s] and ship.fuel > 0:
                 thruster_fired = True
-                thrust_power = True
+                thrust_power = 18
                 ship.fuel = max(0.0, ship.fuel - 0.6)
         rx = bh.x - ship.x
         ry = bh.y - ship.y
@@ -353,7 +355,7 @@ def main():
             size = max(160, bh_radius * 6)
             scaled_sprite = pygame.transform.smoothscale(bh.sprite, (size, size))
             screen.blit(scaled_sprite, (int(bh_px - size / 2), int(bh_py - size / 2)))
-        elif bh.stl_verrtices and bh.stl_faces:
+        elif bh.stl_vertices and bh.stl_faces:
             bh_proj = [
                 project_3d_to_2d(bh.x + vx * 2, bh.y + vy * 2, bh.z + vz * 2, cam_rot_x, cam_rot_y, cam_x, cam_y)[:2]
                 for vx, vy, vz in bh.stl_vertices
