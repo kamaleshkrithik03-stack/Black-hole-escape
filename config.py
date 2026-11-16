@@ -25,7 +25,7 @@ LEVELS = {
 
     },
     2: {
-        "name": "Level 2: Sagittaries A*",
+        "name": "Level 2: Sagittarius A*",
                 "mass": S_MASS,
                 "event_horizon": 50,
                 "description": "This is the supermassive blackhole in the centre of our milkyway"
