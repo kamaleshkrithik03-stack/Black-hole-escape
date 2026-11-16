@@ -61,9 +61,7 @@ def load_stl(filename, target_radius=50, max_faces=800):
     if vertices:
         vertices = normalize_mesh(vertices, target_radius)
     return vertices, faces
-
-                                                
-class BlackHole:
+class BlackHole:#yeah nxt tikmybe a .fbj i gave up 
     def __init__(self, level_config):
         self.update_level(level_config)
         self.x = 0
@@ -80,7 +78,6 @@ class BlackHole:
                 break
         print("Loaded vertices:", len(self.stl_vertices))
         print("Loaded faces:", len(self.stl_faces))
-
     def update_level(self, level_config):
         self.name = level_config["name"]
         self.mass = level_config["mass"]
@@ -89,13 +86,12 @@ class BlackHole:
     @property
     def mu(self):
         return 18000 * (self.event_horizon / 25)
-
-class Spaceship:
+class Spaceship:#this is for loading the spaceship.stl
     def __init__(self, x, y, z, mass=100, fuel=120):
         self.x = float(x)
         self.y = float(y)
         self.z = float(z)
-        self.vx = 0.0
+        self.vx = 9.0 #i changed these values so that ship wont immediatelf fall to its doom
         self.vy = 0.0
         self.vz = 0.0
         self.mass = float(mass)
@@ -105,7 +101,6 @@ class Spaceship:
         self.crashed = False
         self.escaped = False
         self.vertices, self.faces = load_stl("spaceship.stl", target_radius=90, max_faces=1000)
-
     def reset(self, x, y, z, mass=None, fuel=None):
         if mass is not None:
             self.mass = max(1.0, float(mass))
@@ -114,14 +109,13 @@ class Spaceship:
         self.x = float(x)
         self.y = float(y)
         self.z = float(z)
-        self.vx = 0.0
+        self.vx = 9.0
         self.vy = 0.0
         self.vz = 0.0
         self.trail.clear()
         self.is_launched = True
         self.crashed = False
         self.escaped = False
-
 def project_3d_to_2d(x, y, z, camera_rot_x, camera_rot_y, cam_x=0, cam_y=0): #camera settings
     cx, cy, = SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2
     dx = x - cam_x
@@ -138,7 +132,6 @@ def project_3d_to_2d(x, y, z, camera_rot_x, camera_rot_y, cam_x=0, cam_y=0): #ca
     z2 = dy * sin_x + z1 * cos_x
     fov = 600.0
     scale = fov / (fov + z2 + 300)
-
     screen_x = cx + x1 * scale
     screen_y = cy + y2 * scale
     return screen_x, screen_y, scale
@@ -157,7 +150,6 @@ def play_spaghetificaton_video():
                 break
         cap.release()
         cv2.destroyAllWindows()
-
 class InputBox:
     def __init__(self, rect, label, default_text):
         self.rect = pygame.Rect(rect)
@@ -215,12 +207,11 @@ def main():
     mass_box = InputBox((SCREEN_WIDTH + 24, 230, 270, 36), "ship weight or mass", "100")
     apply_btn = pygame.Rect(SCREEN_WIDTH + 24, 282, 270, 36)
 
-    ship = Spaceship(0.0, 210, 0.0, mass=mass_box.value(100), fuel=fuel_box.value(120))
+    ship = Spaceship(0.0, 300, 0.0, mass=mass_box.value(100), fuel=fuel_box.value(100))
     cam_rot_x = 135
     cam_rot_y = 0
     cam_x = ship.x
     cam_y = ship.y * 0.5
-
     running = True
     while running:
         for event in pygame.event.get():
@@ -314,12 +305,12 @@ def main():
 
         screen.fill(COLOR_BG)
         grid_spacing = 120
-        grid_range = 600
+        grid_range = 2000
         for gx in range(-grid_range, grid_range + 1, grid_spacing):
             points = []
-            for gy in range(-grid_range, grid_range + 1, 40):
+            for gy in range(-grid_range, grid_range + 1, 60):
                 d = math.hypot(gx - bh.x, gy - bh.y)
-                warp_z = -min(60, 3000 / max(20, d)) if d < 420 else 0
+                warp_z = -min(70, 4000 / max(20, d)) if d < 500 else 0#im making the range larger cuz iwant to makke the grid seem infinite
                 px, py, _ = project_3d_to_2d(gx, gy, warp_z, cam_rot_x, cam_rot_y, cam_x, cam_y)
                 points.append((px, py))
             if len(points) > 1:
