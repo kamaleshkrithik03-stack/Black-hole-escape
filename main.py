@@ -310,16 +310,16 @@ def main():
             points = []
             for gy in range(-grid_range, grid_range + 1, 60):
                 d = math.hypot(gx - bh.x, gy - bh.y)
-                warp_z = -min(70, 4000 / max(20, d)) if d < 500 else 0#im making the range larger cuz iwant to makke the grid seem infinite
+                warp_z = -min(70, 4000 / max(25, d)) if d < 500 else 0#im making the range larger cuz iwant to makke the grid seem infinite
                 px, py, _ = project_3d_to_2d(gx, gy, warp_z, cam_rot_x, cam_rot_y, cam_x, cam_y)
                 points.append((px, py))
             if len(points) > 1:
                 pygame.draw.lines(screen, COLOR_GRID, False, points, 1)
         for gy in range(-grid_range, grid_range + 1, grid_spacing):
             points = []
-            for gx in range(-grid_range, grid_range + 1, grid_spacing):
+            for gx in range(-grid_range, grid_range + 1, 60):
                 d = math.hypot(gx - bh.x, gy - bh.y)
-                warp_z = -min(60, 3000 / max(20, d)) if d < 400 else 0
+                warp_z = -min(70, 4000 / max(25, d)) if d < 500 else 0
                 px, py, _ = project_3d_to_2d(gx, gy, warp_z, cam_rot_x, cam_rot_y, cam_x, cam_y)
                 points.append((px, py))
             if len(points) > 1:
